@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "styles": "node-sass --watch --source-map true styles/index.scss styles/main.css --style=expanded",
+    "dev": "concurrently \"node-sass --watch --source-map true styles/index.scss styles/main.css --style=expanded\" \"live-server\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
