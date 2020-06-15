@@ -20,6 +20,11 @@ ul {
   padding: 0;
   margin: 0;
 }
+
+canvas {
+  border: 2px black solid;
+  background: white;
+}
 .controls-wrapper {
   height: 30vh;
   width: 40vw;
