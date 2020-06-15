@@ -24,17 +24,29 @@ const getClickCoordinates = (elem, e) => {
   }
 }
 
-const getBoard = (canvas) => {
+const getBoard = (canvas, numCells = 20) => {
   const ctx = canvas.getContext('2d');
+  const rawCellSize = Math.min((canvas.width / numCells), (canvas.height / numCells));
+  const cellSize = Math.floor(rawCellSize);
 
-  const fillRect = (x, y, color = "lightblue") => {
-    const rectSize = 20;
-    const halfway = rectSize / 2;
+  const fillRect = (x, y, color) => {
+    const halfway = cellSize / 2;
     ctx.fillStyle = color;
-    ctx.fillRect(x - halfway, y - halfway, rectSize, rectSize);
+    ctx.fillRect(x - halfway, y - halfway, cellSize, cellSize);
   }
 
-  return { fillRect }
+  const drawGrid = (color = '#444444') => {
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    for (let i = 0; i < numCells + 1; i++) {
+      ctx.moveTo(i * cellSize, 0); // x-value
+      ctx.lineTo(i * cellSize, cellSize * numCells);
+      ctx.moveTo(0, i * cellSize); // y-value
+      ctx.lineTo(cellSize * numCells, i * cellSize);
+    }
+    ctx.stroke();
+  }
+  return { fillRect, drawGrid }
 }
 
 
@@ -43,7 +55,7 @@ const getBoard = (canvas) => {
 
   const sock = io(); // eslint-disable-line
   const canvas = document.querySelector('canvas');
-  const { fillRect } = getBoard(canvas);
+  const { fillRect, drawGrid } = getBoard(canvas);
 
   const onClick = (e) => {
     const { x, y } = getClickCoordinates(canvas, e);
@@ -51,8 +63,9 @@ const getBoard = (canvas) => {
     sock.emit('turn', { x, y });
   }
 
+  drawGrid();
   sock.on('message', log); // SHORT FOR sock.on('message', (text) => log(text));
-  sock.on('turn', ({ x, y }) => fillRect(x, y));
+  sock.on('turn', ({ x, y, playerColor }) => fillRect(x, y, playerColor));
 
   canvas.addEventListener('click', onClick);
   document
