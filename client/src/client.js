@@ -29,12 +29,26 @@ const getBoard = (canvas, numCells = 20) => {
   const rawCellSize = Math.min((canvas.width / numCells), (canvas.height / numCells));
   const cellSize = Math.floor(rawCellSize);
 
-  const fillRect = (x, y, color) => {
-    const halfway = cellSize / 2;
-    ctx.fillStyle = color;
-    ctx.fillRect(x - halfway, y - halfway, cellSize, cellSize);
+  const getCellCoords = (x, y) => {
+    return {
+      x: Math.floor(x / cellSize),
+      y: Math.floor(y / cellSize),
+    }
   }
 
+  // const fillRect = (x, y, color) => {
+  //   const halfway = cellSize / 2;
+  //   ctx.fillStyle = color;dss
+  //   ctx.fillRect(x - halfway, y - halfway, cellSize, cellSize);
+  // }
+  const fillCell = (x, y, color) => {
+    ctx.fillStyle = color;
+    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+  }
+
+  const clearCanvas = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
   const drawGrid = (color = '#444444') => {
     ctx.strokeStyle = color;
     ctx.beginPath();
@@ -46,7 +60,12 @@ const getBoard = (canvas, numCells = 20) => {
     }
     ctx.stroke();
   }
-  return { fillRect, drawGrid }
+
+  const reset = () => {
+    clearCanvas();
+    drawGrid();
+  }
+  return { fillCell, reset, getCellCoords }
 }
 
 
@@ -55,17 +74,17 @@ const getBoard = (canvas, numCells = 20) => {
 
   const sock = io(); // eslint-disable-line
   const canvas = document.querySelector('canvas');
-  const { fillRect, drawGrid } = getBoard(canvas);
+  const { fillCell, reset, getCellCoords } = getBoard(canvas);
 
   const onClick = (e) => {
     const { x, y } = getClickCoordinates(canvas, e);
-    // fillRect(x, y);
-    sock.emit('turn', { x, y });
+    sock.emit('turn', getCellCoords(x, y));
   }
 
-  drawGrid();
+  reset();
+
   sock.on('message', log); // SHORT FOR sock.on('message', (text) => log(text));
-  sock.on('turn', ({ x, y, playerColor }) => fillRect(x, y, playerColor));
+  sock.on('turn', ({ x, y, playerColor }) => fillCell(x, y, playerColor));
 
   canvas.addEventListener('click', onClick);
   document
