@@ -81,6 +81,7 @@ const getBoard = (canvas, numCells = 20) => {
     drawBaseGrid();
   }
 
+
   return { fillCell, updateBoard, reset, getCellCoords }
 }
 
@@ -96,7 +97,14 @@ const getBoard = (canvas, numCells = 20) => {
     const { x, y } = getClickCoordinates(canvas, e);
     sock.emit('turn', getCellCoords(x, y));
   }
-
+  const resetClick = e => {
+    e.preventDefault();
+    sock.emit('newGame', (board) => {
+      reset();
+      console.log(board);
+      updateBoard(board);
+    })
+  }
 
   reset();
   sock.on('message', log); // SHORT FOR sock.on('message', (text) => log(text));
@@ -104,6 +112,11 @@ const getBoard = (canvas, numCells = 20) => {
   sock.on('turn', ({ x, y, playerColor }) => fillCell(x, y, playerColor));
 
   canvas.addEventListener('click', onClick);
+  canvas.onselectstart = function () { return false; } // Stops double clicks from highlighting page text
+
+  document
+    .querySelector('#reset_button')
+    .addEventListener('click', e => resetClick(e));
   document
     .querySelector('#chat-form')
     .addEventListener('submit', onChatSubmitted(sock));
