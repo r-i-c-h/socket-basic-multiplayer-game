@@ -46,10 +46,7 @@ const getBoard = (canvas, numCells = 20) => {
     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
   }
 
-  const clearCanvas = () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-  const drawGrid = (color = '#444444') => {
+  const drawBaseGrid = (color = '#444444') => {
     ctx.strokeStyle = color;
     ctx.beginPath();
     for (let i = 0; i < numCells + 1; i++) {
@@ -61,11 +58,30 @@ const getBoard = (canvas, numCells = 20) => {
     ctx.stroke();
   }
 
+  const clearCanvas = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  const renderBoard = (board) => {
+    board.forEach((row, yCoord) => {
+      row.forEach((playerColor, xCoord) => {
+        if (playerColor) { // arr value is NOT null
+          fillCell(yCoord, xCoord, playerColor);
+        }
+      })
+    })
+  }
+  const updateBoard = (board = []) => {
+    clearCanvas();
+    drawBaseGrid();
+    renderBoard(board);
+  }
   const reset = () => {
     clearCanvas();
-    drawGrid();
+    drawBaseGrid();
   }
-  return { fillCell, reset, getCellCoords }
+
+  return { fillCell, updateBoard, reset, getCellCoords }
 }
 
 
@@ -74,16 +90,17 @@ const getBoard = (canvas, numCells = 20) => {
 
   const sock = io(); // eslint-disable-line
   const canvas = document.querySelector('canvas');
-  const { fillCell, reset, getCellCoords } = getBoard(canvas);
+  const { fillCell, reset, updateBoard, getCellCoords } = getBoard(canvas);
 
   const onClick = (e) => {
     const { x, y } = getClickCoordinates(canvas, e);
     sock.emit('turn', getCellCoords(x, y));
   }
 
-  reset();
 
+  reset();
   sock.on('message', log); // SHORT FOR sock.on('message', (text) => log(text));
+  sock.on('board', updateBoard); // shortcut for board => reset(board);
   sock.on('turn', ({ x, y, playerColor }) => fillCell(x, y, playerColor));
 
   canvas.addEventListener('click', onClick);
